@@ -30,7 +30,6 @@ struct CreateRecipeView: View {
                 }
                 .listRowBackground(Color("GlamourPink").opacity(0.1))
                 
-                
                 Section {
                     Text("Шаги приготовления")
                         .font(.headline)
@@ -41,34 +40,36 @@ struct CreateRecipeView: View {
             }
             .navigationTitle("💅Новый рецепт💅")
             .foregroundColor(Color("GlamourPink")) // Основной цвет текста
-                       
+            
             .toolbar { //навигационная панель
                 Button("Готово") {
-                    let ingredientsArray = zip(
-                        ingredients.components(separatedBy: ","), //разбиение строки пользователя по запятой
-                        amounts.components(separatedBy: ",")
-                    ).map { //создаем пару ингредиент - значение кол-ва, если массивы разных размеров то лишнее отбрасывается
-                        Ingredient(
-                            name: $0.trimmingCharacters(in: .whitespaces), //$0- первый параметр,убираем лишние пробелы и переносы строк
-                            amountPerServing: Double($1.trimmingCharacters(in: .whitespaces)) ?? 0,//если не удалось конвертировать nil
-                            unit: "г" // Просто ставим "г" по умолчанию
+                    // Проверяем обязательные поля перед сохранением
+                    if !name.isEmpty && !time.isEmpty {
+                        let ingredientsArray = zip(
+                            ingredients.components(separatedBy: ","), //разбиение строки пользователя по запятой
+                            amounts.components(separatedBy: ",")
+                        ).map { //создаем пару ингредиент - значение кол-ва, если массивы разных размеров то лишнее отбрасывается
+                            Ingredient(
+                                name: $0.trimmingCharacters(in: .whitespaces), //$0- первый параметр,убираем лишние пробелы и переносы строк
+                                amountPerServing: Double($1.trimmingCharacters(in: .whitespaces)) ?? 0,//если не удалось конвертировать nil
+                                unit: "г" // Просто ставим "г" по умолчанию
+                            )
+                        }
+                        
+                        let newRecipe = Recipe(
+                            name: name,
+                            imageName: "recipe_placeholder",
+                            calories: Int(calories) ?? 0, //преобразует в инт
+                            time: Int(time) ?? 0,
+                            ingredients: ingredientsArray, //передаем массив созданный в зипе
+                            steps: steps.components(separatedBy: "\n") //делим по переносу строки
                         )
+                        
+                        recipes.append(newRecipe) //это массив binding автомат изменяет родительскую вьюшку
+                        dismiss() //закрывает текущее окно и возвращает к предыдущему
                     }
-                    
-                    let newRecipe = Recipe(
-                        name: name,
-                        imageName: "recipe_placeholder",
-                        calories: Int(calories) ?? 0, //преобразует в инт
-                        time: Int(time) ?? 0,
-                        ingredients: ingredientsArray, //передаем массив созданный в зипе
-                        steps: steps.components(separatedBy: "\n") //делим по переносу строки
-                    )
-                    
-                    recipes.append(newRecipe) //это массив binding автомат изменяет родительскую вьюшку
-                    dismiss() //закрывает текущее окно и возвращает к предыдущему
                 }
-                .disabled(name.isEmpty || time.isEmpty) //кнопка неактивна если имя или время не указаны
-                .foregroundColor(Color("glamourpink"))
+                .foregroundColor(name.isEmpty || time.isEmpty ? .gray : Color("GlamourPink")) // Серый, если не все заполнено
             }
         }
     }
